@@ -22,10 +22,10 @@
 </template>
 
 <script setup>
-import Profile_info from "../widgets/Profile_info.vue";
-import Profile_orders from "../widgets/Profile_orders.vue";
-import Profile_password from "../widgets/Profile_password.vue";
-import Profile_recently_viewed from "../widgets/Profile_recently_viewed.vue";
+import Profile_info from "../components/profile/Profile_info.vue";
+import Profile_orders from "../components/profile/Profile_orders.vue";
+import Profile_password from "../components/profile/Profile_password.vue";
+import Profile_recently_viewed from "../components/profile/Profile_recently_viewed.vue";
 import { ref, computed } from "vue";
 
 // 定義選項

@@ -17,9 +17,9 @@
 <script setup>
 import "animate.css";
 import "./assets/base.css";
-import icon from "./components/The_icon.vue";
-import nav_bar from "./components/Nav_bar.vue";
-import footer_bar from "./components/Footer_bar.vue";
+import The_icon from "./components/common/The_icon.vue";
+import nav_bar from "./components/common/Nav_bar.vue";
+import footer_bar from "./components/common/Footer_bar.vue";
 </script>
 
 <style lang="scss" scoped>

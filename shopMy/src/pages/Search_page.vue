@@ -10,7 +10,7 @@
 
     <div class="search_section">
       <div class="serach_section_left">
-        <Side_category_list />
+        <Side_category_list :categories="categories" />
       </div>
       <div class="serach_section_right">
         <div class="search_bar_container">
@@ -25,7 +25,8 @@
             :name="product.name"
             :price="product.price"
             :discount_price="product.discount_price"
-            :image="product.image"
+            :default_img="product.default_img"
+            :hover_img="product.hover_img"
           />
         </div>
         <div class="pagination_container">
@@ -41,56 +42,55 @@
 </template>
 
 <script setup>
-import Side_category_list from "../widgets/Side_category_list.vue";
-import Title_with_Line from "../widgets/Title_with_Line.vue";
-import Search_bar from "../widgets/Search_bar.vue";
-import Product_card from "../widgets/Product_card.vue";
-import Pagination from "../widgets/Pagination.vue";
+import Side_category_list from "../components/product/Side_category_list.vue";
+import Title_with_Line from "../components/widgets/Title_with_Line.vue";
+import Search_bar from "../components/widgets/Search_bar.vue";
+import Product_card from "../components/product/Product_card.vue";
+import Pagination from "../components/common/Pagination.vue";
 
-const products = [
-  {
-    id: 1,
-    name: "我是家具名稱",
-    price: 1000,
-    discount_price: 800,
-    image: "../../public/product/product001.webp",
-  },
-  {
-    id: 2,
-    name: "另一件家具",
-    price: 1200,
-    discount_price: null,
-    image: "../../public/product/product001.webp",
-  },
-  {
-    id: 2,
-    name: "另一件家具",
-    price: 1200,
-    discount_price: null,
-    image: "../../public/product/product001.webp",
-  },
-  {
-    id: 2,
-    name: "另一件家具",
-    price: 1200,
-    discount_price: null,
-    image: "../../public/product/product001.webp",
-  },
-  {
-    id: 2,
-    name: "另一件家具",
-    price: 1200,
-    discount_price: null,
-    image: "../../public/product/product001.webp",
-  },
-  {
-    id: 2,
-    name: "另一件家具",
-    price: 1200,
-    discount_price: null,
-    image: "../../public/product/product001.webp",
-  },
-];
+import { ref, onMounted } from "vue";
+import axios from "axios";
+
+// 初始化分類和產品資料
+const categories = ref([]);
+const products = ref([]);
+const currentPage = ref(1);
+const totalPages = ref(1);
+const itemsPerPage = "";
+
+async function fetchProducts(page = 1) {
+  try {
+    const response = await axios.get("/api/Product/getAllProducts", {
+      params: { page, limit: itemsPerPage },
+    });
+    products.value = response.data.products;
+    totalPages.value = response.data.totalPages;
+    currentPage.value = response.data.currentPage;
+  } catch (error) {
+    console.error("無法獲取商品資料:", error);
+  }
+}
+
+onMounted(async () => {
+  try {
+    // 獲取分類資料
+    const categoriesResponse = await axios.get(
+      "/api/categorie/getAllCategories"
+    );
+    categories.value = categoriesResponse.data;
+
+    // 初始載入商品
+    await fetchProducts();
+  } catch (error) {
+    console.error("無法獲取資料:", error);
+  }
+});
+
+function updateCurrentPage(page) {
+  if (page !== currentPage.value) {
+    fetchProducts(page);
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -145,6 +145,9 @@ const products = [
     }
     .serach_section_right {
       width: 100%;
+      .search_bar_container {
+        padding: 0;
+      }
     }
   }
 }

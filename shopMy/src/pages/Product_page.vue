@@ -36,12 +36,12 @@
 </template>
 
 <script setup>
-import icon from "../components/The_icon.vue";
-import Product_img from "../widgets/Product_img.vue";
-import Product_info from "../widgets/Product_info.vue";
-import Amount_counter from "../widgets/Amount_counter.vue";
-import Common_btn from "../widgets/Common_btn.vue";
-import Recommend from "../widgets/Recommend.vue";
+import icon from "../components/common/The_icon.vue";
+import Product_img from "../components/product/Product_img.vue";
+import Product_info from "../components/product/Product_info.vue";
+import Amount_counter from "../components/product/Amount_counter.vue";
+import Common_btn from "../components/widgets/Common_btn.vue";
+import Recommend from "../components/common/Recommend.vue";
 import { ref } from "vue";
 
 const imageList = [

@@ -8,11 +8,10 @@
 </template>
 
 <script setup>
-import icon from "../components/The_icon.vue";
-import Carousel from "../widgets/Carousel.vue";
-import Intro from "../widgets/Intro.vue";
-import Category_link from "../widgets/Category_link.vue";
-import News from "../widgets/News.vue";
+import Carousel from "../components/common/Carousel.vue";
+import Intro from "../components/common/Intro.vue";
+import Category_link from "../components/product/Category_link.vue";
+import News from "../components/common/News.vue";
 
 const imageList = [
   "/carousel/Carousel01.svg",

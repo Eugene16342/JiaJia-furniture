@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "root",
+    "password": "wsx883311",
+    "database": "shopmydb",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": "wsx883311",
+    "database": "shopmydb",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": "wsx883311",
+    "database": "shopmydb",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}

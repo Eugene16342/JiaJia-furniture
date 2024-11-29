@@ -28,9 +28,9 @@
 </template>
 
 <script setup>
-import Title_with_Line from "../widgets/Title_with_Line.vue";
-import Cart_product_info from "../widgets/Cart_product_info.vue";
-import Common_btn from "../widgets/Common_btn.vue";
+import Title_with_Line from "../components/widgets/Title_with_Line.vue";
+import Cart_product_info from "../components/product/Cart_product_info.vue";
+import Common_btn from "../components/widgets/Common_btn.vue";
 import { reactive } from "vue";
 
 const products = reactive([

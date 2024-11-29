@@ -170,8 +170,8 @@
 </template>
 
 <script setup>
-import common_btn from "../widgets/Common_btn.vue";
-import common_input from "../widgets/Common_input.vue";
+import common_btn from "../components/widgets/Common_btn.vue";
+import common_input from "../components/widgets/Common_input.vue";
 import { ref } from "vue";
 
 // 定義狀態
