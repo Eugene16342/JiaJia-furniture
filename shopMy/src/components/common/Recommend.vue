@@ -1,63 +1,139 @@
 <template>
-  <div>
+  <div class="recommend_carousel">
     <Title_with_Line title="你可能會喜歡" />
-
-    <div class="recommend_container">
-      <router-link to="/" class="product_card">
-        <div class="img_container">
-          <img src="../../public/product/product001.webp" />
-        </div>
-        <div class="title">好用家具</div>
-      </router-link>
-      <router-link to="/" class="product_card">
-        <div class="img_container">
-          <img src="../../public/product/product001.webp" />
-        </div>
-        <div class="title">好用家具</div>
-      </router-link>
-      <router-link to="/" class="product_card">
-        <div class="img_container">
-          <img src="../../public/product/product001.webp" />
-        </div>
-        <div class="title">好用家具</div>
-      </router-link>
-      <router-link to="/" class="product_card">
-        <div class="img_container">
-          <img src="../../public/product/product001.webp" />
-        </div>
-        <div class="title">好用家具</div>
-      </router-link>
+    <div class="recommend_container_wrapper">
+      <button class="scroll_btn left" @click="scrollLeft">‹</button>
+      <div ref="scrollContainer" class="recommend_container">
+        <Product_card
+          v-for="product in recommendedProducts"
+          :key="product.id"
+          :id="product.id"
+          :name="product.name"
+          :price="product.price"
+          :discount_price="product.discount_price"
+          :default_img="product.images[0]"
+          :hover_img="product.images[1] || product.images[0]"
+        />
+      </div>
+      <button class="scroll_btn right" @click="scrollRight">›</button>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, watch, onMounted } from "vue";
 import Title_with_Line from "../widgets/Title_with_Line.vue";
+import Product_card from "../product/Product_card.vue";
+import axios from "axios";
+
+// Props 接收數據
+const props = defineProps({
+  context: {
+    type: String,
+    required: true,
+    validator: (value) => ["product", "checkout"].includes(value),
+  },
+  relatedId: {
+    type: [Number, String],
+    default: null,
+  },
+});
+
+// 推薦商品數據
+const recommendedProducts = ref([]);
+
+// 滾動容器引用
+const scrollContainer = ref(null);
+
+// 初始化推薦商品數據
+async function fetchRecommendedProducts() {
+  if (!props.relatedId) {
+    console.warn("沒有提供 relatedId，無法加載推薦商品");
+    return;
+  }
+
+  try {
+    const response = await axios.get(
+      `/api/Product/getRecommedProduct/${props.relatedId}`
+    );
+    recommendedProducts.value = response.data.products || [];
+  } catch (error) {
+    console.error("無法加載推薦商品:", error);
+  }
+}
+
+// 滾動功能
+function scrollLeft() {
+  if (scrollContainer.value) {
+    scrollContainer.value.scrollBy({
+      left: -200,
+      behavior: "smooth",
+    });
+  }
+}
+
+function scrollRight() {
+  if (scrollContainer.value) {
+    scrollContainer.value.scrollBy({
+      left: 200,
+      behavior: "smooth",
+    });
+  }
+}
+
+// 初始化數據
+onMounted(fetchRecommendedProducts);
+
+// 監聽 props 變化
+watch(() => props.relatedId, fetchRecommendedProducts);
 </script>
 
 <style lang="scss" scoped>
-@import "../../assets/colors.scss";
-
-.recommend_container {
-  width: 100%;
+.recommend_carousel {
   display: flex;
-  justify-content: space-around;
-  .product_card {
-    width: 20%;
-    max-width: 250px;
-    display: inline-block;
-    transition: color 0.2s ease-in-out;
-    &:hover {
-      color: $red;
+  flex-direction: column;
+  gap: 20px;
+
+  .recommend_container_wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+
+    .scroll_btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+      background-color: #ccc;
+      border: none;
+      padding: 10px;
+      font-size: 1.5rem;
+      border-radius: 5px;
+      cursor: pointer;
+      &:hover {
+        background-color: #aaa;
+      }
     }
-    .img_container {
-      width: 100%;
+
+    .left {
+      left: 10px;
     }
-    .title {
-      text-align: center;
-      font-weight: 600;
-      font-size: 1.1rem;
-      margin-top: 10px;
+
+    .right {
+      right: 10px;
+    }
+
+    .recommend_container {
+      display: flex;
+      gap: 20px;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+
+      /* 保持卡片大小 */
+      .product_card_container {
+        flex-shrink: 0;
+      }
     }
   }
 }

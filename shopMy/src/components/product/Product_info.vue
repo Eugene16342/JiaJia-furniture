@@ -2,44 +2,48 @@
   <div class="product_info">
     <div class="info_title">{{ title }}</div>
     <div class="info_description">{{ description }}</div>
-    <div class="info_feature">{{ features }}</div>
 
-    <!-- 尺寸選擇 -->
+    <div v-if="materials" class="materials">
+      <ul>
+        <li v-for="material in materials.split(' / ')" :key="material">
+          {{ material }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- 尺寸資訊 -->
     <div class="select_title">
-      尺寸
-      <span
-        v-for="size in sizes"
-        :key="size"
-        class="select_box"
-        :class="{ active: selectedSize === size }"
-        @click="toggleSelection('size', size)"
-      >
-        {{ size }}
-      </span>
+      長：{{ dimensions.length }} 公分<br />
+      寬：{{ dimensions.width }} 公分<br />
+      高：{{ dimensions.height }} 公分
     </div>
 
     <!-- 顏色選擇 -->
-    <div class="select_title">
+    <div v-if="colors && colors.length > 0" class="select_title">
       顏色
-      <span
+      <div
         v-for="color in colors"
-        :key="color"
+        :key="color.name"
         class="select_box"
-        :class="{ active: selectedColor === color }"
-        @click="toggleSelection('color', color)"
+        :class="{ active: selectedColor?.color_id === color.color_id }"
+        @click="selectColor(color)"
       >
-        {{ color }}
-      </span>
+        {{ color.name }}
+        <div class="color_box" :style="{ backgroundColor: color.hex }"></div>
+      </div>
     </div>
 
     <!-- 價格資訊 -->
     <div class="info_price">
       <div>
         <span
-          >原價 <span class="price">{{ originalPrice }}</span></span
+          >原價
+          <span :class="{ price: discountedPrice }">{{
+            originalPrice
+          }}</span></span
         >
       </div>
-      <div class="off_price">
+      <div class="off_price" v-if="discountedPrice">
         <span>特價 </span><span>{{ discountedPrice }}</span>
       </div>
     </div>
@@ -47,79 +51,29 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, defineEmits } from "vue";
 
-// Props 接收父組件傳遞的數據
 defineProps({
-  title: {
-    type: String,
-    required: true,
+  title: { type: String, default: "未命名商品" },
+  description: { type: String, default: "暫無描述" },
+  materials: { type: String, default: "" },
+  dimensions: {
+    type: Object,
+    default: () => ({ length: 0, width: 0, height: 0 }),
   },
-  description: {
-    type: String,
-    required: true,
-  },
-  features: {
-    type: String,
-    required: true,
-  },
-  sizes: {
-    type: Array,
-    required: true,
-  },
-  colors: {
-    type: Array,
-    required: true,
-  },
-  originalPrice: {
-    type: Number,
-    required: true,
-  },
-  discountedPrice: {
-    type: Number,
-    required: true,
-  },
+  colors: { type: Array, default: () => [] },
+  originalPrice: { type: Number, default: 0 },
+  discountedPrice: { type: Number, default: null },
 });
 
-// 狀態
-const selectedSize = ref(null);
+const emit = defineEmits(["colorSelected"]);
+
+// 響應式變量，存儲當前選中的顏色
 const selectedColor = ref(null);
-const amount = ref(0);
 
-// 方法
-function toggleSelection(type, value) {
-  if (type === "size") {
-    selectedSize.value = selectedSize.value === value ? null : value;
-  } else if (type === "color") {
-    selectedColor.value = selectedColor.value === value ? null : value;
-  }
-}
-
-function increaseAmount() {
-  amount.value += 1;
-}
-
-function decreaseAmount() {
-  if (amount.value > 0) {
-    amount.value -= 1;
-  }
-}
-
-function updateAmount(value) {
-  amount.value = Math.max(0, parseInt(value) || 0);
-}
-
-function addToCart() {
-  if (!selectedSize.value || !selectedColor.value) {
-    alert("請選擇尺寸和顏色");
-    return;
-  }
-
-  console.log("加入購物車", {
-    size: selectedSize.value,
-    color: selectedColor.value,
-    quantity: amount.value,
-  });
+function selectColor(color) {
+  selectedColor.value = color;
+  emit("colorSelected", color);
 }
 </script>
 
@@ -137,9 +91,15 @@ function addToCart() {
     font-size: 2rem;
   }
 
+  .materials {
+    font-weight: 600;
+  }
+
   .select_title {
     font-weight: 600;
     .select_box {
+      display: inline-block;
+      align-items: center;
       margin: 0 10px;
       border: 1px solid $primary;
       padding: 3px;
@@ -150,6 +110,12 @@ function addToCart() {
       &.active {
         color: $red;
         background-color: $wheat;
+      }
+      .color_box {
+        display: inline-block;
+        width: 30px;
+        height: 15px;
+        border-radius: 3px;
       }
     }
   }

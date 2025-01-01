@@ -63,7 +63,7 @@ function closePolicy() {
   position: fixed;
   width: 100%;
   height: 100%;
-  z-index: 10;
+  z-index: 12;
   background-color: $black3;
   top: 0;
   left: 0;

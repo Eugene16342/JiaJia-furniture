@@ -2,38 +2,85 @@
   <div class="payment_container">
     <div class="recipient_info page_half">
       <div class="title">聯絡方式</div>
-      <div class="input_container_full">
-        <common_input placeholder="電子信箱" />
+      <div class="two_half">
+        <div class="input_container_half">
+          <common_input
+            id="phone"
+            showLabel="true"
+            label="連絡電話"
+            placeholder="連絡電話，市話請加區碼"
+            v-model="form_state.phone.value"
+            :errorMessage="form_state.phone.errorMessage"
+            :hasError="form_state.phone.hasError"
+          />
+        </div>
+        <div class="input_container_half">
+          <common_input
+            id="email"
+            showLabel="true"
+            label="電子信箱"
+            placeholder="電子信箱"
+            v-model="form_state.email.value"
+            :errorMessage="form_state.email.errorMessage"
+            :hasError="form_state.email.hasError"
+          />
+        </div>
       </div>
       <div class="title">配送資訊</div>
       <div class="two_half">
         <div class="input_container_half">
-          <common_input placeholder="名字" />
+          <common_input
+            id="first_name"
+            showLabel="true"
+            label="名字"
+            placeholder="名字"
+            v-model="form_state.first_name.value"
+            :errorMessage="form_state.first_name.errorMessage"
+            :hasError="form_state.first_name.hasError"
+          />
         </div>
         <div class="input_container_half">
-          <common_input placeholder="姓氏" />
+          <common_input
+            id="last_name"
+            showLabel="true"
+            label="姓氏"
+            placeholder="姓氏"
+            v-model="form_state.last_name.value"
+            :errorMessage="form_state.last_name.errorMessage"
+            :hasError="form_state.last_name.hasError"
+          />
         </div>
       </div>
       <div class="input_container_full">
-        <common_input placeholder="地址" />
+        <common_input
+          id="address"
+          showLabel="true"
+          label="配送地址"
+          placeholder="地址"
+          v-model="form_state.address.value"
+          :errorMessage="form_state.address.errorMessage"
+          :hasError="form_state.address.hasError"
+        />
       </div>
-      <div class="input_container_full">
-        <common_input placeholder="公寓、套房等(選填)" />
+
+      <div class="title">
+        付款方式
+        <span
+          class="error_message"
+          v-show="form_state.selected_option.hasError"
+        >
+          {{ form_state.selected_option.errorMessage }}
+        </span>
       </div>
-      <div class="two_half">
-        <div class="input_container_half">
-          <common_input placeholder="市" />
-        </div>
-        <div class="input_container_half">
-          <common_input placeholder="郵遞區號(選填)" />
-        </div>
-      </div>
-      <div class="title">付款</div>
-      <div class="pay_way_container">
+
+      <div
+        class="pay_way_container"
+        :class="{ error: form_state.selected_option.hasError }"
+      >
         <div class="pay_way">
           <div
             class="payment_option"
-            :class="{ active: selectedOption === 'credit_one' }"
+            :class="{ active: selected_option === 'credit_one' }"
             @click="selectOption('credit_one')"
           >
             <input
@@ -41,12 +88,12 @@
               id="credit_one"
               name="payment"
               value="credit_one"
-              @change="selectOption('credit_one')"
+              v-model="selected_option"
             />
             <label for="credit_one">綠界科技 - 信用卡一次付清</label>
           </div>
           <transition name="slide-fade">
-            <div class="payment_detail" v-if="selectedOption === 'credit_one'">
+            <div class="payment_detail" v-if="selected_option === 'credit_one'">
               <p>
                 按下一下「立即付款」後，系統將會將您重導向至綠界科技 -
                 信用卡一次付清，以安全地完成購買程序。
@@ -57,7 +104,7 @@
         <div class="pay_way">
           <div
             class="payment_option"
-            :class="{ active: selectedOption === 'credit_installment' }"
+            :class="{ active: selected_option === 'credit_installment' }"
             @click="selectOption('credit_installment')"
           >
             <input
@@ -65,14 +112,14 @@
               id="credit_installment"
               name="payment"
               value="credit_installment"
-              @change="selectOption('credit_installment')"
+              v-model="selected_option"
             />
             <label for="credit_installment">綠界科技 - 信用卡分期</label>
           </div>
           <transition name="slide-fade">
             <div
               class="payment_detail"
-              v-if="selectedOption === 'credit_installment'"
+              v-if="selected_option === 'credit_installment'"
             >
               <p>
                 按下一下「立即付款」後，系統將會將您重導向至綠界科技 -
@@ -84,7 +131,7 @@
         <div class="pay_way">
           <div
             class="payment_option"
-            :class="{ active: selectedOption === 'bank_transfer' }"
+            :class="{ active: selected_option === 'bank_transfer' }"
             @click="selectOption('bank_transfer')"
           >
             <input
@@ -92,78 +139,73 @@
               id="bank_transfer"
               name="payment"
               value="bank_transfer"
-              @change="selectOption('bank_transfer')"
+              v-model="selected_option"
             />
             <label for="bank_transfer">銀行匯款</label>
           </div>
           <transition name="slide-fade">
             <div
               class="payment_detail"
-              v-if="selectedOption === 'bank_transfer'"
+              v-if="selected_option === 'bank_transfer'"
             >
               <p>【銀行轉帳支付方式請留意】</p>
             </div>
           </transition>
         </div>
       </div>
+
       <div class="btn_confirm rwd_noshow">
-        <common_btn text="確認訂單" />
+        <common_btn text="確認訂單" @click="success_than_push()" />
       </div>
     </div>
     <div class="product_info page_half">
-      <div class="rwd_noshow">
-        <div class="product_info_card">
+      <div>
+        <div
+          class="product_info_card"
+          v-for="item in selected_items"
+          :key="item.product_id + item.color_id"
+        >
           <div class="img_container">
-            <img src="../../public/product/product001.webp" />
-            <div class="img_aomunt">5</div>
-          </div>
-          <div class="product_name">商品名稱</div>
-          <div class="product_price">商品價格</div>
-        </div>
-        <div class="product_info_card">
-          <div class="img_container">
-            <img src="../../public/product/product001.webp" />
-            <div class="img_aomunt">5</div>
+            <img :src="item.image" alt="商品圖片" />
+            <div class="img_amount">{{ item.quantity }}</div>
           </div>
           <div class="product_name">
-            商品名稱商品名稱商品名稱商品名稱商品名稱 商品名稱商品名稱 商品名稱
-            商品名稱商品名稱 商品名稱商品名稱
+            {{ item.name }}
+            <br />
+            {{ item.color_id ? item.color_name : "" }}
           </div>
-          <div class="product_price">商品價格</div>
-        </div>
-        <div class="product_info_card">
-          <div class="img_container">
-            <img src="../../public/product/product001.webp" />
-            <div class="img_aomunt">5</div>
-          </div>
-          <div class="product_name">商品名稱</div>
-          <div class="product_price">商品價格</div>
+          <div class="product_price">NT$ {{ item.price }}</div>
         </div>
       </div>
       <div class="code_container">
         <div class="input_container_code">
-          <common_input placeholder="折扣碼" />
+          <common_input
+            v-model="form_state.discount.value"
+            :errorMessage="form_state.discount.errorMessage"
+            :hasError="form_state.discount.hasError"
+            placeholder="折扣碼"
+          />
         </div>
         <div class="btn_container">
-          <common_btn text="使用" fontSize="1" />
+          <common_btn text="使用" @click="discount()" fontSize="1" />
         </div>
       </div>
 
       <div class="total_price">
         <div class="price_row">
-          <span>小記●9999個品項</span>
-          <span>$9999999</span>
+          <span>小記●{{ price_details.total_quantity }}個品項</span>
+          <span>NT$ {{ price_details.sub_total }}</span>
         </div>
         <div class="price_row">
           <span class="delivery_fee">運費</span>
-          <span>$999</span>
+          <span>NT$ {{ price_details.delivery_fee }}</span>
         </div>
         <div class="price_row final_price">
-          <span>總計</span><span>$999999999</span>
+          <span>總計</span> <span>NT$ {{ price_details.total_price }}</span>
         </div>
       </div>
       <div class="btn_confirm rwd_show">
-        <common_btn text="確認訂單" />
+        <common_btn text="確認訂單" @click="success_than_push()" />
       </div>
     </div>
   </div>
@@ -172,15 +214,65 @@
 <script setup>
 import common_btn from "../components/widgets/Common_btn.vue";
 import common_input from "../components/widgets/Common_input.vue";
-import { ref } from "vue";
+
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { useRouter } from "vue-router";
+import { use_cart_store } from "../stores/cart";
+import payment_controller from "../controllers/payment_controller";
 
 // 定義狀態
-const selectedOption = ref("");
+const selected_option = ref("");
 
 // 定義選項切換的方法
 function selectOption(option) {
-  selectedOption.value = option;
+  selected_option.value = option;
+  form_state.selected_option.value = option;
 }
+
+const cart_store = use_cart_store();
+
+// 初始化 router
+const router = useRouter();
+
+// 計算已勾選的商品
+const selected_items = computed(() => cart_store.selected_items);
+
+// 訂單成功生成 跳轉畫面
+async function success_than_push() {
+  const is_success = await create_order();
+  console.log(is_success);
+  if (is_success) {
+    router.push("/cart");
+  }
+}
+
+onMounted(async () => {
+  // 如果勾選的項目為空就跳轉
+  if (cart_store.selected_items.length < 1) {
+    return router.push("/cart");
+  }
+  await get_user_info();
+  await computed_total_price();
+
+  window.addEventListener("beforeunload", before_reload);
+});
+
+// 詢問是否要離開
+function before_reload(event) {
+  event.preventDefault();
+}
+onBeforeUnmount(() => {
+  window.removeEventListener("beforeunload", before_reload);
+});
+
+const {
+  price_details,
+  form_state,
+  computed_total_price,
+  discount,
+  get_user_info,
+  create_order,
+} = payment_controller();
 </script>
 
 <style lang="scss" scoped>
@@ -217,12 +309,14 @@ function selectOption(option) {
       gap: 5%;
       margin-bottom: 10px;
       .img_container {
-        min-width: 60px;
+        width: 60px;
+        height: 60px;
         img {
           width: 60px;
+          height: 60px;
           border-radius: 5px;
         }
-        .img_aomunt {
+        .img_amount {
           position: absolute;
           top: -5px;
           right: -5px;
@@ -238,6 +332,7 @@ function selectOption(option) {
         }
       }
       .product_name {
+        min-width: 160px;
       }
       .product_price {
         min-width: 100px;
@@ -293,8 +388,12 @@ function selectOption(option) {
   }
   .pay_way_container {
     border: 2px solid $black2;
+    border-radius: 5px;
     padding: 10px;
     background-color: $gray;
+    &.error {
+      border: 2px solid $red;
+    }
     .pay_way {
       border: 2px solid $black2;
       border-radius: 5px;
@@ -349,6 +448,11 @@ function selectOption(option) {
     margin-top: 50px;
   }
 }
+.error_message {
+  font-weight: normal;
+  font-size: 0.9rem;
+  color: $red;
+}
 /* transition 動畫效果 */
 .slide-fade-enter-active,
 .slide-fade-leave-active {
@@ -374,11 +478,11 @@ function selectOption(option) {
     }
     .page_half {
       width: 100%;
+      .rwd_noshow {
+        display: none;
+      }
     }
 
-    .rwd_noshow {
-      display: none;
-    }
     .product_info {
       .rwd_show {
         display: block;

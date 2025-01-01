@@ -3,55 +3,81 @@
     <div class="product_page_container">
       <div class="page_half">
         <Product_img
-          :images="imageList"
-          initialImage="/product/product001.webp"
+          :images="store.product.images"
+          :initialImage="store.product.images[0]"
         />
       </div>
       <div class="page_half info_container">
         <Product_info
-          title="大江東去浪淘盡 千古風流人物"
-          description="大江東去，浪淘盡，千古風流人物。故壘西邊，人道是，三國周郎赤壁。亂石崩雲，驚濤裂岸，捲起千堆雪。江山如畫，一時多少豪傑。
-遙想公瑾當年，小喬初嫁了，雄姿英發。羽扇綸巾，談笑間，檣櫓灰飛煙滅。故國神遊，多情應笑我，早生華髮。人生如夢，一尊還酹江月。
-—來自貝冷絲皇發佈於貝冷絲皇的沙龍 "
-          features="大江東去，浪淘盡，千古風流人物。故壘西邊，人道是，三國周郎赤壁。亂石崩雲，驚濤裂岸，捲起千堆雪。江山如畫，一時多少豪傑。
-遙想公瑾當年，小喬初嫁了，雄姿英發。羽扇綸巾，談笑間，檣櫓灰飛煙滅。故國神遊，多情應笑我，早生華髮。人生如夢，一尊還酹江月。
-—來自貝冷絲皇發佈於貝冷絲皇的沙龍 "
-          :sizes="['超大', '超中', '超小']"
-          :colors="['紅色', '鮮血色', '沒那麼紅']"
-          :originalPrice="100"
-          :discountedPrice="99"
+          v-if="store.product && store.product.name"
+          ref="productInfoRef"
+          :title="store.product.name"
+          :description="store.product.description"
+          :materials="store.product.materials"
+          :colors="store.product.colors"
+          :originalPrice="store.product.price"
+          :discountedPrice="store.product.discount_price"
+          :dimensions="store.product.dimensions"
+          @colorSelected="handleColorSelected"
         />
         <div class="add_to_cart">
           <div class="amount_container">
             <Amount_counter v-model="quantity" :min="1" :max="10" />
           </div>
-          <div class="btn_container"><Common_btn text="加入購物車" /></div>
+          <div class="btn_container">
+            <Common_btn text="加入購物車" @click="add_to_cart" />
+          </div>
         </div>
       </div>
     </div>
+    <!--
     <div class="recommend_container">
-      <Recommend />
+      <Recommend context="product" :relatedId="store.product.categoryId" />
     </div>
+    -->
   </div>
 </template>
 
 <script setup>
-import icon from "../components/common/The_icon.vue";
 import Product_img from "../components/product/Product_img.vue";
 import Product_info from "../components/product/Product_info.vue";
 import Amount_counter from "../components/product/Amount_counter.vue";
 import Common_btn from "../components/widgets/Common_btn.vue";
 import Recommend from "../components/common/Recommend.vue";
-import { ref } from "vue";
 
-const imageList = [
-  "/product/product001.webp",
-  "/product/product001.webp",
-  "/product/product001.webp",
-  "/product/product001.webp",
-];
+import { ref, onMounted, watch } from "vue";
+import { useRoute } from "vue-router";
+import { use_product_store } from "../stores/index";
+import { product_controller } from "../controllers/product_controller";
 
-const quantity = ref(1); // 默認數量為 1
+const route = useRoute();
+const store = use_product_store(); // 初始化 Pinia Store
+const product_id = route.params.id; // 從 URL 提取商品 ID
+const quantity = ref(1); // 追蹤購買數量
+const selectedColor = ref(null); // 追蹤選中的顏色
+
+// 接收子組件傳回的選中顏色
+function handleColorSelected(color) {
+  selectedColor.value = color;
+}
+
+onMounted(() => {
+  store.fetch_product(product_id); // 請求商品資料
+
+  // 滾動到最頂部
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth", // 平滑滾動
+  });
+});
+
+function add_to_cart() {
+  product_controller.add_to_cart(
+    store.product.product_id,
+    selectedColor.value,
+    quantity.value
+  );
+}
 </script>
 
 <style lang="scss" scoped>
@@ -96,9 +122,6 @@ const quantity = ref(1); // 默認數量為 1
     .page_half {
       width: 100vw;
     }
-  }
-  .recommend_container {
-    display: none;
   }
 }
 </style>

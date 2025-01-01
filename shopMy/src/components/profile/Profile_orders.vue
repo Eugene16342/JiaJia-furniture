@@ -1,25 +1,27 @@
 <template>
   <div class="profile_info">
     <div class="order_container" v-for="(order, index) in orders" :key="index">
-      <!-- 訂單基本信息 -->
+      <!-- 訂單基本資訊 -->
       <div class="order_base_info" @click="toggleOrder(index)">
-        <span>{{ order.id }}</span>
+        <span>{{ order.order_id }}</span>
         <span>{{ order.status }}</span>
-        <span>{{ order.amount }}</span>
-        <span>{{ order.date }}</span>
+        <span>${{ order.total_price }}</span>
+        <span>訂貨日:{{ order.created_at }}</span>
       </div>
 
-      <!-- 訂單商品信息 -->
+      <!-- 訂單內容 -->
       <transition name="slide-fade">
         <div v-show="expandedOrders[index]" class="orders_item_container">
           <div class="order_item" v-for="(item, i) in order.items" :key="i">
             <div class="img_container">
-              <img :src="item.image" alt="商品圖片" />
+              <img :src="item.product_images" alt="商品圖片" />
               <div class="product_amount">{{ item.quantity }}</div>
             </div>
-            <span>{{ item.name }}</span>
-            <span>{{ item.model }}</span>
-            <span>{{ item.price }}</span>
+            <span class="item_name">
+              {{ item.product_name }} <br />
+              {{ item.color_name ? item.color_name : "" }}
+            </span>
+            <span class="item_price">${{ item.price }}</span>
           </div>
         </div>
       </transition>
@@ -28,48 +30,10 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import { use_profile_controller } from "../../controllers/profile_controller";
 
-// 模擬訂單數據
-const orders = ref([
-  {
-    id: "A1B2C3D4",
-    status: "已完成",
-    amount: "1234",
-    date: "2023-11-10",
-    items: [
-      {
-        name: "商品名稱 1",
-        model: "型號 1",
-        price: "100",
-        image: "../../public/product/product001.webp",
-        quantity: 5,
-      },
-      {
-        name: "商品名稱 2",
-        model: "型號 2",
-        price: "200",
-        image: "../../public/product/product001.webp",
-        quantity: 3,
-      },
-    ],
-  },
-  {
-    id: "D4E5F6G7",
-    status: "處理中",
-    amount: "5678",
-    date: "2023-11-09",
-    items: [
-      {
-        name: "商品名稱 3",
-        model: "型號 3",
-        price: "300",
-        image: "../../public/product/product001.webp",
-        quantity: 2,
-      },
-    ],
-  },
-]);
+const { orders, fetch_orders } = use_profile_controller();
 
 // 控制展開的訂單
 const expandedOrders = ref({});
@@ -78,6 +42,14 @@ const expandedOrders = ref({});
 function toggleOrder(index) {
   expandedOrders.value[index] = !expandedOrders.value[index];
 }
+
+onMounted(async () => {
+  try {
+    await fetch_orders(); // 加載訂單數據
+  } catch (error) {
+    console.error("無法加載訂單資料");
+  }
+});
 </script>
 
 <style lang="scss" scoped>
@@ -91,7 +63,7 @@ function toggleOrder(index) {
     .order_base_info {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: space-around;
       background-color: $wheat;
       padding: 15px;
       border-radius: 5px 5px 0 0;
@@ -112,9 +84,18 @@ function toggleOrder(index) {
         justify-content: space-between;
         align-items: center;
         background-color: $gray;
+        padding: 0 30px;
         margin-bottom: 10px;
         &:last-child {
           margin-bottom: 0;
+        }
+        .item_name {
+          text-align: center;
+          padding: 0 10px;
+        }
+        .item_price {
+          padding: 0 10px;
+          width: 10%;
         }
         .img_container {
           width: 80px;
@@ -156,7 +137,22 @@ function toggleOrder(index) {
 }
 .slide-fade-enter-to,
 .slide-fade-leave-from {
-  max-height: 1000px; /* 依據內容高度調整 */
+  max-height: 1000px;
   opacity: 1;
+}
+
+@media (max-width: 992px) {
+  .profile_info {
+    .order_container {
+      .orders_item_container {
+        .order_item {
+          padding: 0;
+          .item_price {
+            width: 75px;
+          }
+        }
+      }
+    }
+  }
 }
 </style>

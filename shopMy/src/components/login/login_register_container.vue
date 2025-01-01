@@ -50,6 +50,7 @@ function closeContainer() {
   background-color: $white;
   margin: auto;
   border-radius: 5px;
+  z-index: 11;
   .close {
     position: absolute;
     right: 2%;

@@ -1,133 +1,179 @@
 <template>
   <nav class="navbar">
-    <router-link to="/"><img src="/base/Logo.png" /></router-link>
+    <router-link to="/">
+      <img @click="navbar_store.close_hamburger_menu" src="/base/Logo.png" />
+    </router-link>
 
     <!-- 一般狀態的導覽列 -->
     <div class="navbar_right">
       <div
         class="text_hover title"
-        @mouseenter="showMenu('products')"
-        @mouseleave="hideMenu('products')"
+        @mouseenter="navbar_store.isMenuOpen.products = true"
+        @mouseleave="navbar_store.isMenuOpen.products = false"
       >
         全部商品
         <transition name="dropdown">
-          <div v-show="isMenuOpen.products" class="dropdown">
-            <router-link to="/">全部商品之類的 待補</router-link>
+          <div v-show="navbar_store.isMenuOpen.products" class="dropdown">
+            <router-link
+              v-for="category in navbar_store.categories"
+              :key="category.category_id"
+              :to="{
+                path: '/search',
+                query: { category: encodeURIComponent(category.name_zh) },
+              }"
+            >
+              {{ category.name_zh }}
+            </router-link>
           </div>
         </transition>
       </div>
 
       <div
         class="text_hover title"
-        @mouseenter="showMenu('about')"
-        @mouseleave="hideMenu('about')"
+        @mouseenter="navbar_store.isMenuOpen.about = true"
+        @mouseleave="navbar_store.isMenuOpen.about = false"
       >
         關於我們
         <transition name="dropdown">
-          <div v-show="isMenuOpen.about" class="dropdown">
+          <div v-show="navbar_store.isMenuOpen.about" class="dropdown">
             <router-link to="/concept">品牌理念</router-link>
             <router-link to="/">聯繫我們</router-link>
           </div>
         </transition>
       </div>
-      <div class="text_hover title">最新消息</div>
-      <icon icon="man" @click="toggleLoginRegisterContainer" />
-      <icon icon="cart" />
+      <div class="text_hover title" @click="notifyLatestNews">最新消息</div>
+      <div
+        v-if="auth_store.isAuthenticated"
+        class="text_hover title"
+        @click="logout"
+      >
+        登出
+      </div>
+      <icon icon="man" @click="profile_navigation" />
+      <router-link to="/cart">
+        <icon icon="cart" />
+        <div v-show="cart_total_items !== 0" class="cart_items">
+          {{ cart_total_items }}
+        </div>
+      </router-link>
     </div>
 
     <!-- 小於992px的導覽列 -->
     <div
       class="hamberger_list_toggle"
-      :class="{ open: isHamburgerMenuOpen }"
-      @click="toggleHamburgerMenu"
+      :class="{ open: navbar_store.is_hamburger_menu_open }"
+      @click="navbar_store.toggle_hamburger_menu"
     >
-      <div class="icon_wrapper" :class="{ rotate_icon: isHamburgerMenuOpen }">
-        <icon icon="list" :isActive="isIconActive" />
+      <div
+        class="icon_wrapper"
+        :class="{ rotate_icon: navbar_store.is_hamburger_menu_open }"
+      >
+        <icon icon="list" />
       </div>
 
       <div>
         <div class="hamberger_list" @click.stop>
           <div
             class="text_hover title"
-            :class="{ active: isMenuOpen.products }"
-            @click="toggleList('products')"
+            :class="{ active: navbar_store.isMenuOpen.products }"
+            @click="navbar_store.toggle_list('products')"
           >
             全部商品
           </div>
           <transition name="listdown">
-            <div v-show="isMenuOpen.products" class="list">
-              <router-link to="/">全部商品之類的 待補</router-link>
-              <router-link to="/">全部商品之類的 待補</router-link>
-              <router-link to="/">全部商品之類的 待補</router-link>
+            <div v-show="navbar_store.isMenuOpen.products" class="list">
+              <router-link
+                v-for="category in navbar_store.categories"
+                :key="category.category_id"
+                @click="navbar_store.close_hamburger_menu"
+                :to="{
+                  path: '/search',
+                  query: { category: encodeURIComponent(category.name_zh) },
+                }"
+              >
+                {{ category.name_zh }}
+              </router-link>
             </div>
           </transition>
           <div
             class="text_hover title"
-            :class="{ active: isMenuOpen.about }"
-            @click="toggleList('about')"
+            :class="{ active: navbar_store.isMenuOpen.about }"
+            @click="navbar_store.toggle_list('about')"
           >
             關於我們
           </div>
           <transition name="listdown">
-            <div v-show="isMenuOpen.about" class="list">
+            <div v-show="navbar_store.isMenuOpen.about" class="list">
               <router-link to="/concept">品牌理念</router-link>
-              <router-link to="/">關於我們之類的</router-link>
               <router-link to="/">關於我們之類的</router-link>
             </div>
           </transition>
           <div class="text_hover title">最新消息</div>
+          <div
+            v-if="auth_store.isAuthenticated"
+            class="text_hover title"
+            @click="logout"
+          >
+            登出
+          </div>
           <div class="list_icon_container">
-            <icon icon="man" @click="toggleLoginRegisterContainer" />
-            <icon icon="cart" />
+            <icon icon="man" @click="profile_navigation" />
+            <router-link to="/cart">
+              <icon icon="cart" />
+              <div v-show="cart_total_items !== 0" class="cart_items">
+                {{ cart_total_items }}
+              </div>
+            </router-link>
           </div>
         </div>
       </div>
     </div>
     <login_register_container
-      v-if="isLoginComponentOpen"
-      @close="isLoginComponentOpen = false"
+      v-if="navbar_store.is_login_container_open"
+      @close="navbar_store.is_login_container_open = false"
     />
   </nav>
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, onBeforeUnmount, Transition } from "vue";
 import Icon from "./The_icon.vue";
 import login_register_container from "../login/login_register_container.vue";
+import login_Logic from "../../controllers/login_controller";
 
-// 菜單開啟狀態
-const isMenuOpen = reactive({
-  products: false,
-  news: false,
-  about: false,
+import { ref, onMounted, computed } from "vue";
+import {
+  use_navbar_store,
+  use_auth_store,
+  use_cart_store,
+} from "../../stores/index";
+
+import { navbarController } from "../../controllers/nav_bar_controller";
+
+import { useRouter } from "vue-router";
+const router = useRouter(); // 獲取 router
+const navbar_store = use_navbar_store();
+const auth_store = use_auth_store();
+const cart_store = use_cart_store();
+
+onMounted(() => {
+  navbarController.fetch_Categories(); // 初始化時調用控制器的方法
+  console.log("isAuthenticated:", auth_store.isAuthenticated);
+  console.log("toekn:", auth_store.token);
 });
 
-const isIconActive = ref(false);
+import NotificationService from "../../controllers/notify_controller";
 
-const isHamburgerMenuOpen = ref(false); // 控制漢堡表單的顯示狀態
+const notifyLatestNews = () => {
+  NotificationService.error("你點擊最新消息");
+};
 
-function showMenu(menu) {
-  isMenuOpen[menu] = true;
-}
+const { logout } = login_Logic();
 
-function hideMenu(menu) {
-  isMenuOpen[menu] = false;
-}
+const profile_navigation = () => {
+  navbarController.profile_navigation(router); // 傳遞 router
+};
 
-function toggleList(listName) {
-  isMenuOpen[listName] = !isMenuOpen[listName];
-}
-
-function toggleHamburgerMenu() {
-  isHamburgerMenuOpen.value = !isHamburgerMenuOpen.value;
-  isIconActive.value = !isIconActive.value;
-}
-
-const isLoginComponentOpen = ref(false);
-
-function toggleLoginRegisterContainer() {
-  isLoginComponentOpen.value = !isLoginComponentOpen.value;
-}
+const cart_total_items = computed(() => cart_store.total_items);
 </script>
 
 <style lang="scss" scoped>
@@ -204,6 +250,25 @@ function toggleLoginRegisterContainer() {
   }
   .hamberger_list_toggle {
     display: none;
+  }
+}
+
+// 購物車數量的數字
+a {
+  position: relative;
+  .cart_items {
+    position: absolute;
+    right: -9px;
+    top: -7px;
+    color: $white;
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 2px;
+    width: 20px;
+    height: 20px;
+    background-color: $red;
+    text-align: center;
+    border-radius: 50px;
   }
 }
 

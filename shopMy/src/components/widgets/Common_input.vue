@@ -1,6 +1,6 @@
 <template>
   <div class="input_container">
-    <label v-if="showLabel" for="id">{{ label }}</label>
+    <label v-if="showLabel" :for="id">{{ label }}</label>
     <input
       :id="id"
       :type="type"
@@ -31,7 +31,7 @@ defineProps({
   modelValue: String,
   placeholder: String,
   showLabel: {
-    type: Boolean,
+    type: [Boolean, String],
     default: false,
   },
   label: String,
@@ -58,6 +58,7 @@ const isFocused = ref(false);
 
 .input_container {
   label {
+    font-weight: 600;
     cursor: pointer;
     display: inline-block;
     margin-bottom: 5px;

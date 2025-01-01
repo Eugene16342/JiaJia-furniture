@@ -1,13 +1,15 @@
 <template>
   <div class="product_card_container">
-    <router-link :to="`/product/${id}`" class="img_container">
+    <router-link :to="`/product/${id}/${name}`" class="img_container">
       <!-- 默認圖片 -->
       <img :src="default_img" :alt="name" class="default_image" />
       <!-- 懸停圖片 -->
       <img :src="hover_img" :alt="name" class="hover_image" />
     </router-link>
     <div class="info_container">
-      <router-link :to="`/product/${id}`" class="title">{{ name }}</router-link>
+      <router-link :to="`/product/${id}/${name}`" class="title">{{
+        name
+      }}</router-link>
       <div class="price_container">
         <div class="price" v-if="discount_price">
           <span class="line-through">{{ price }}</span>
@@ -16,7 +18,9 @@
           {{ discount_price || price }}
         </div>
       </div>
-      <div class="add_to_cart">放入購物車</div>
+      <router-link :to="`/product/${id}/${name}`" class="watch_detail"
+        >查看詳細</router-link
+      >
     </div>
   </div>
 </template>
@@ -81,7 +85,8 @@ const props = defineProps({
       }
     }
 
-    .add_to_cart {
+    .watch_detail {
+      display: block;
       width: 120px;
       background-color: $primary;
       color: $white;

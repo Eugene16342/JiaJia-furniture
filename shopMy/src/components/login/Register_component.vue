@@ -42,42 +42,54 @@
         <div class="register_input_container">
           <Common_input
             placeholder="請輸入驗證碼"
-            v-model="formState.verificationCode.value"
-            :errorMessage="formState.verificationCode.errorMessage"
-            :hasError="formState.verificationCode.hasError"
+            v-model="formState.verify_code.value"
+            :errorMessage="formState.verify_code.errorMessage"
+            :hasError="formState.verify_code.hasError"
           />
         </div>
-        <div class="code_container">asdasd</div>
+        <div class="code_container">
+          <img :src="captcha_url" />
+          <The_icon icon="retry" @click="refresh_captcha" class="retry" />
+        </div>
       </div>
 
       <div class="checkbox_container">
-        <input id="agreement" type="checkbox" />
-        <label for="agreement"> 我同意</label
-        ><span @click.stop="openPolicy">服務條款</span>
+        <input
+          id="agreement"
+          type="checkbox"
+          v-model="formState.is_agreement_checked"
+        />
+        <label for="agreement"> 我同意</label>
+        <span @click.stop="open_policy">服務條款</span>
+        <div
+          class="error_message"
+          :class="{ visible: !!formState.agreementError }"
+        >
+          {{ formState.agreementError }}
+        </div>
       </div>
 
       <div class="btn_containers">
         <div class="btn_container">
-          <Common_btn text="註冊" @click="submitForm" />
+          <Common_btn text="註冊" @click="submit_form" />
         </div>
         <div class="btn_container">
           <Common_btn text="取消" styleType="second" @click="switchToLogin" />
         </div>
       </div>
     </div>
-    <div v-if="isPolicyOpen">
-      <Privacy_policy @close="closePolicy" />
+    <div v-if="isPolicy_open">
+      <Privacy_policy @close="close_policy" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { onMounted, ref } from "vue";
 import Common_input from "../widgets/Common_input.vue";
 import Common_btn from "../widgets/Common_btn.vue";
 import Privacy_policy from "../common/Privacy_policy.vue";
-
-const isPolicyOpen = ref(false);
+import The_icon from "../common/The_icon.vue";
 
 const emit = defineEmits(["toLogin"]);
 
@@ -85,76 +97,26 @@ function switchToLogin() {
   emit("toLogin"); // 通知父組件切換到登入
 }
 
-function openPolicy() {
-  isPolicyOpen.value = true; // 打開服務條款視窗
+// 導入邏輯
+import RegisterLogic from "../../controllers/register_controller";
+
+const isPolicy_open = ref(false);
+
+function open_policy() {
+  isPolicy_open.value = true;
 }
 
-function closePolicy() {
-  isPolicyOpen.value = false; // 關閉服務條款視窗
+function close_policy() {
+  isPolicy_open.value = false;
 }
 
-const formState = reactive({
-  username: { value: "", errorMessage: "", hasError: false },
-  password: { value: "", errorMessage: "", hasError: false },
-  confirmPassword: { value: "", errorMessage: "", hasError: false },
-  email: { value: "", errorMessage: "", hasError: false },
-  verificationCode: { value: "", errorMessage: "", hasError: false },
+// 從 RegisterLogic 中獲取所有狀態與方法
+const { formState, captcha_url, refresh_captcha, submit_form } =
+  RegisterLogic();
+
+onMounted(() => {
+  refresh_captcha();
 });
-
-function validateForm() {
-  let isValid = true;
-
-  // 驗證帳號
-  if (!formState.username.value) {
-    formState.username.errorMessage = "帳號不能為空";
-    formState.username.hasError = true;
-    isValid = false;
-  } else {
-    formState.username.errorMessage = "";
-    formState.username.hasError = false;
-  }
-
-  // 驗證密碼
-  if (formState.password.value.length < 6) {
-    formState.password.errorMessage = "密碼長度不能小於6位";
-    formState.password.hasError = true;
-    isValid = false;
-  } else {
-    formState.password.errorMessage = "";
-    formState.password.hasError = false;
-  }
-
-  // 確認密碼
-  if (formState.confirmPassword.value !== formState.password.value) {
-    formState.confirmPassword.errorMessage = "兩次密碼輸入不一致";
-    formState.confirmPassword.hasError = true;
-    isValid = false;
-  } else {
-    formState.confirmPassword.errorMessage = "";
-    formState.confirmPassword.hasError = false;
-  }
-
-  // 驗證電子郵件
-  if (!/\S+@\S+\.\S+/.test(formState.email.value)) {
-    formState.email.errorMessage = "請輸入正確的電子郵件地址";
-    formState.email.hasError = true;
-    isValid = false;
-  } else {
-    formState.email.errorMessage = "";
-    formState.email.hasError = false;
-  }
-
-  return isValid;
-}
-
-function submitForm() {
-  if (validateForm()) {
-    console.log("表單提交成功", formState);
-    // 在此處提交表單數據到後端
-  } else {
-    console.log("表單有錯誤，請修正");
-  }
-}
 </script>
 
 <style lang="scss" scoped>
@@ -181,12 +143,27 @@ function submitForm() {
     }
     .code_container {
       width: 40%;
-      background-color: $gray;
       height: 40px;
       display: flex;
       align-items: center;
-      padding: 20px;
       border-radius: 5px;
+      margin-left: 20px;
+      gap: 10px;
+      img {
+        height: 40px;
+        border-radius: 5px;
+      }
+      .retry {
+        user-select: none;
+      }
+    }
+  }
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
     }
   }
   .checkbox_container {
@@ -194,12 +171,26 @@ function submitForm() {
     span {
       color: $red;
       cursor: pointer;
-
       &:hover {
         text-decoration: underline;
       }
     }
+
+    .error_message {
+      width: 100%;
+      height: 20px;
+      color: $red;
+      font-size: 0.9rem;
+      opacity: 0;
+
+      transition: opacity 0.2s ease-in-out;
+
+      &.visible {
+        opacity: 1;
+      }
+    }
   }
+
   .btn_containers {
     display: flex;
     gap: 10%;

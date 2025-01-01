@@ -3,19 +3,36 @@
     <div class="title">登入</div>
     <div class="inputs_container">
       <div class="login_input_container">
-        <Common_input placeholder="請輸入帳號" />
+        <Common_input
+          placeholder="請輸入帳號"
+          v-model="formState.username.value"
+          :errorMessage="formState.username.errorMessage"
+          :hasError="formState.username.hasError"
+        />
       </div>
 
       <div class="login_input_container">
-        <Common_input placeholder="請輸入密碼" />
-        <div class="checkbox_container">
-          <input id="remember" type="checkbox" /><label for="remember"
-            >保持登入</label
-          >
-        </div>
+        <Common_input
+          placeholder="請輸入密碼"
+          type="password"
+          v-model="formState.password.value"
+          :errorMessage="formState.password.errorMessage"
+          :hasError="formState.password.hasError"
+        />
       </div>
 
-      <Common_btn text="登入" />
+      <div class="checkbox_container">
+        <input id="remember" type="checkbox" v-model="formState.remember" />
+        <label for="remember">保持登入</label>
+      </div>
+
+      <div class="btn_container">
+        <Common_btn
+          :text="isLoading ? '登入中...' : '登入'"
+          :styleType="isLoading ? 'disable' : 'primary'"
+          @click="login"
+        />
+      </div>
 
       <div class="go_to_register">
         新朋友嗎，<span @click="switchToRegister">點我註冊</span>
@@ -25,14 +42,20 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import login_Logic from "../../controllers/login_controller";
 import Common_input from "../widgets/Common_input.vue";
 import Common_btn from "../widgets/Common_btn.vue";
 
+// 切換到註冊頁面
 const emit = defineEmits(["toRegister"]);
-
 function switchToRegister() {
-  emit("toRegister"); // 通知父組件切換到註冊
+  emit("toRegister");
 }
+
+// 從 RegisterLogic 中獲取所有狀態與方法
+const { formState, isLoading, login } = login_Logic();
 </script>
 
 <style lang="scss" scoped>
@@ -48,7 +71,10 @@ function switchToRegister() {
   margin: auto;
   margin-top: 50px;
   .login_input_container {
-    margin-bottom: 30px;
+    margin-bottom: 15px;
+  }
+  .checkbox_container {
+    margin-bottom: 15px;
   }
   .go_to_register {
     margin-top: 10px;

@@ -15,13 +15,13 @@ defineProps({
     required: true,
   },
   fontSize: {
-    type: Number,
+    type: [Number, String],
     default: 1.4,
   },
   styleType: {
     type: String,
     default: "primary",
-    validator: (value) => ["primary", "second"].includes(value),
+    validator: (value) => ["primary", "second", "disable"].includes(value),
   },
 });
 </script>
@@ -53,6 +53,11 @@ defineProps({
       background-color: $red;
       color: $wheat;
     }
+  }
+  &.disable {
+    background-color: $gray;
+    color: $primary;
+    cursor: not-allowed;
   }
 }
 </style>

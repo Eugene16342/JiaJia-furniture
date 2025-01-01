@@ -24,26 +24,23 @@
 <script setup>
 import Profile_info from "../components/profile/Profile_info.vue";
 import Profile_orders from "../components/profile/Profile_orders.vue";
-import Profile_password from "../components/profile/Profile_password.vue";
-import Profile_recently_viewed from "../components/profile/Profile_recently_viewed.vue";
+
 import { ref, computed } from "vue";
 
-// 定義選項
 const tabs = [
   { key: "profile", label: "會員資料", component: Profile_info },
-  { key: "password", label: "修改密碼", component: Profile_password },
   { key: "orders", label: "訂單一覽", component: Profile_orders },
-  { key: "recent", label: "最近瀏覽", component: Profile_recently_viewed },
 ];
 
-// 當前激活的選項
+// 使用者當前的選擇
 const activeTab = ref("profile");
 
-function selectTab(tabKey) {
+// 切換標籤邏輯
+const selectTab = (tabKey) => {
   activeTab.value = tabKey;
-}
+};
 
-// 動態計算當前組件
+// 計算當前要顯示的組件
 const currentComponent = computed(() => {
   const currentTab = tabs.find((tab) => tab.key === activeTab.value);
   return currentTab ? currentTab.component : null;

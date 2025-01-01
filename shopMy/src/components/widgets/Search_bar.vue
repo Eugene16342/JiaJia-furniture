@@ -1,12 +1,26 @@
 <template>
   <div class="search_bar_container">
-    <input placeholder="請輸入關鍵字" />
-    <span>搜尋</span>
+    <input
+      v-model="keyword"
+      @keydown.enter="onSearch"
+      placeholder="請輸入關鍵字"
+    />
+    <span @click="onSearch">搜尋</span>
   </div>
 </template>
 
 <script setup>
+import { ref } from "vue";
 import icon from "../common/The_icon.vue";
+
+// 定義可以觸發的事件
+const emit = defineEmits(["search"]); // 定義 'search' 事件
+
+const keyword = ref(""); // 關鍵字的數據綁定
+
+function onSearch() {
+  emit("search", keyword.value); // 發送事件，將輸入的值傳遞給父組件
+}
 </script>
 
 <style lang="scss" scoped>

@@ -4,67 +4,59 @@
     <input
       class="amount"
       type="number"
-      :value="currentValue"
-      @input="updateAmount($event.target.value)"
+      :value="modelValue"
+      @input="update_amount($event.target.value)"
+      @blur="handle_blur"
+      @keydown="handle_keydown"
     />
     <div class="amount_btn plus_btn" @click="increaseAmount">+</div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { defineProps, defineEmits, watch } from "vue";
+import { product_controller } from "../../controllers/product_controller"; // 引入控制器
 
-// Props 用於傳入父組件的初始值和最小/最大限制
 const props = defineProps({
-  modelValue: {
-    type: Number,
-    required: true,
-  },
-  min: {
-    type: Number,
-    default: 0,
-  },
-  max: {
-    type: Number,
-    default: Infinity,
-  },
+  modelValue: { type: Number, required: true },
 });
 
-// Emit 用於更新父組件中的數據
 const emit = defineEmits(["update:modelValue"]);
 
-// 當前值
-const currentValue = ref(props.modelValue);
-
-// 方法
 function increaseAmount() {
-  if (currentValue.value < props.max) {
-    currentValue.value += 1;
-    emit("update:modelValue", currentValue.value);
-  }
+  emit("update:modelValue", props.modelValue + 1);
 }
 
 function decreaseAmount() {
-  if (currentValue.value > props.min) {
-    currentValue.value -= 1;
-    emit("update:modelValue", currentValue.value);
+  if (props.modelValue === 1) {
+    emit("update:modelValue", (props.modelValue = 1));
+    return;
   }
+  emit("update:modelValue", props.modelValue - 1);
 }
 
-function updateAmount(value) {
-  const newValue = Math.max(
-    props.min,
-    Math.min(props.max, parseInt(value) || props.min)
-  );
-  currentValue.value = newValue;
-  emit("update:modelValue", currentValue.value);
+function update_amount(value) {
+  const newValue = Number(value); // 確保輸入值為數字
+  emit("update:modelValue", newValue); // 通知父組件
 }
 
-// 監聽 modelValue 的變化，保持同步
+// 處理失焦事件，修正空值為最小值
+function handle_blur() {
+  const validValue = product_controller.blur_to_min(props.modelValue); // 使用控制器修正空值
+  emit("update:modelValue", validValue);
+}
+
+function handle_keydown(event) {
+  product_controller.prevent_key_down(event);
+}
+
 watch(
   () => props.modelValue,
   (newValue) => {
-    currentValue.value = newValue;
+    const validValue = product_controller.limit_quantity(newValue); // 使用控制器檢查範圍
+    if (validValue !== newValue) {
+      emit("update:modelValue", validValue); // 修正數值後再通知父組件
+    }
   }
 );
 </script>
@@ -98,6 +90,12 @@ watch(
     }
     .plus_btn {
       border-radius: 0 5px 5px 0;
+    }
+    &.disabled {
+      &:hover {
+        background-color: $black3;
+        cursor: default;
+      }
     }
   }
 

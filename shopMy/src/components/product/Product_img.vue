@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
 // Props 用於接收調用組件時傳遞的圖片數據
 const props = defineProps({
@@ -36,7 +36,18 @@ const props = defineProps({
 });
 
 // 主要展示的圖片
-const mainImage = ref(props.initialImage || props.images[0]);
+const mainImage = ref("");
+
+// 設置預設圖片邏輯
+watch(
+  () => props.images,
+  (newImages) => {
+    if (newImages.length > 0) {
+      mainImage.value = props.initialImage || newImages[0];
+    }
+  },
+  { immediate: true }
+);
 
 // 滾動容器
 const scrollContainer = ref(null);
@@ -67,11 +78,16 @@ function changeMainImage(image) {
 .image_carousel {
   display: flex;
   flex-direction: column;
+  width: 100%;
   gap: 10px;
 
   .show_img_container {
     width: 100%;
-    object-fit: contain;
+
+    img {
+      width: 100%;
+      object-fit: contain;
+    }
   }
   .replace_img_container_wrapper {
     position: relative;

@@ -2,10 +2,10 @@
   <div class="list_container">
     <div
       class="list_title"
-      :class="{ active: selectedIndex === index }"
-      v-for="(category, index) in categories"
-      :key="category.id"
-      @click="toggleActive(index)"
+      :class="{ active: category.category_id === selected_categoryId }"
+      v-for="category in categories"
+      :key="category.category_id"
+      @click="selectCategory(category.category_id)"
     >
       {{ category.name_zh }}
     </div>
@@ -13,24 +13,18 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref } from "vue";
+import { defineProps, defineEmits } from "vue";
 
-// 接收父組件傳遞的分類數據
-const { categories } = defineProps({
-  categories: {
-    type: Array,
-    required: true,
-  },
+// 接收父組件傳遞的數據
+const props = defineProps({
+  categories: { type: Array, required: true },
+  selected_categoryId: { type: Number, default: null }, // 當前選中的分類 ID
 });
 
-const emit = defineEmits(["categoryClick"]); // 定義事件
+const emit = defineEmits(["selectCategory"]); // 定義事件
 
-const selectedIndex = ref(null);
-
-function toggleActive(index) {
-  selectedIndex.value = selectedIndex.value === index ? null : index;
-  const categoryId = categories[index]?.id; // 獲取選中的分類 ID
-  emit("categoryClick", categoryId); // 傳遞分類 ID 給父組件
+function selectCategory(categoryId) {
+  emit("selectCategory", categoryId); // 通知父組件選擇了分類
 }
 </script>
 

@@ -7,19 +7,24 @@
       fontWeight="600"
       lineHeight="1px"
     />
-
     <div class="search_section">
       <div class="serach_section_left">
-        <Side_category_list :categories="categories" />
+        <Side_category_list
+          :categories="store.categories"
+          :selected_categoryId="store.selected_categoryId"
+          @selectCategory="(categoryId) => handle_category_select(categoryId)"
+        />
       </div>
       <div class="serach_section_right">
         <div class="search_bar_container">
-          <Search_bar />
+          <Search_bar @search="handleSearch" />
         </div>
         <div class="products_container">
-          <!-- 使用 v-for 循環渲染商品卡片 -->
+          <div v-if="!store.has_results" class="no_results">
+            找不到符合條件的商品，請嘗試其他關鍵字或篩選條件。
+          </div>
           <Product_card
-            v-for="product in products"
+            v-for="product in store.products"
             :key="product.id"
             :id="product.id"
             :name="product.name"
@@ -31,9 +36,10 @@
         </div>
         <div class="pagination_container">
           <Pagination
-            :totalPages="totalPages"
-            :currentPage="currentPage"
-            @update:currentPage="updateCurrentPage"
+            v-if="store.has_results"
+            :totalPages="store.totalPages"
+            :currentPage="store.currentPage"
+            @update:currentPage="(page) => update_current_page(page)"
           />
         </div>
       </div>
@@ -48,49 +54,48 @@ import Search_bar from "../components/widgets/Search_bar.vue";
 import Product_card from "../components/product/Product_card.vue";
 import Pagination from "../components/common/Pagination.vue";
 
-import { ref, onMounted } from "vue";
-import axios from "axios";
+import { use_search_store } from "../stores/search";
+import { search_controller } from "../controllers/search_controller";
+import { onMounted, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
 
-// 初始化分類和產品資料
-const categories = ref([]);
-const products = ref([]);
-const currentPage = ref(1);
-const totalPages = ref(1);
-const itemsPerPage = "";
+const store = use_search_store();
+const controller = search_controller;
+const router = useRouter();
+const route = useRoute();
 
-async function fetchProducts(page = 1) {
-  try {
-    const response = await axios.get("/api/Product/getAllProducts", {
-      params: { page, limit: itemsPerPage },
-    });
-    products.value = response.data.products;
-    totalPages.value = response.data.totalPages;
-    currentPage.value = response.data.currentPage;
-  } catch (error) {
-    console.error("無法獲取商品資料:", error);
-  }
-}
-
-onMounted(async () => {
-  try {
-    // 獲取分類資料
-    const categoriesResponse = await axios.get(
-      "/api/categorie/getAllCategories"
-    );
-    categories.value = categoriesResponse.data;
-
-    // 初始載入商品
-    await fetchProducts();
-  } catch (error) {
-    console.error("無法獲取資料:", error);
-  }
+onMounted(() => {
+  controller.init_search_page(route);
 });
 
-function updateCurrentPage(page) {
-  if (page !== currentPage.value) {
-    fetchProducts(page);
-  }
+function handleSearch(keyword) {
+  // 調用 store 的方法進行搜索
+
+  store.fetch_products(1, store.selected_categoryId, keyword);
+  console.log(
+    "分類是 " +
+      store.selected_categoryId +
+      "關鍵字是" +
+      store.search_keyword +
+      "有商品嗎" +
+      store.has_results
+  );
 }
+
+function handle_category_select(categoryId) {
+  controller.handle_category_select(categoryId, router, route);
+}
+
+function update_current_page(page) {
+  controller.update_current_page(page, router, route);
+}
+
+watch(
+  () => route.query,
+  async () => {
+    await search_controller.init_search_page(route);
+  }
+);
 </script>
 
 <style lang="scss" scoped>
@@ -117,6 +122,11 @@ function updateCurrentPage(page) {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
+    }
+    .no_results {
+      margin: auto;
+      font-weight: 600;
+      font-size: 1.2rem;
     }
 
     .search_bar_container {

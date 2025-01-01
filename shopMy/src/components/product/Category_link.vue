@@ -4,14 +4,18 @@
       <div class="rwd">
         <div class="img_container">
           <img src="/category_link/sofa.jpg" />
-          <router-link to="/" class="category_hover"
+          <router-link
+            to="/search?category=%25E6%25B2%2599%25E7%2599%25BC"
+            class="category_hover"
             >沙發
             <icon color="wheat" icon="sofa" />
           </router-link>
         </div>
         <div class="img_container">
           <img src="/category_link/light.jpg" />
-          <router-link to="/" class="category_hover"
+          <router-link
+            to="/search?category=%25E7%2587%2588%25E5%2585%25B7"
+            class="category_hover"
             >燈具
             <icon color="wheat" icon="light" />
           </router-link>
@@ -21,22 +25,28 @@
       <div class="rwd bottom">
         <div class="img_container">
           <img src="/category_link/desktop.jpg" />
-          <router-link to="/" class="category_hover"
-            >桌子
+          <router-link
+            to="/search?category=%25E6%25A1%258C%25E6%25AB%2583"
+            class="category_hover"
+            >桌櫃
             <icon color="wheat" icon="desk" />
           </router-link>
         </div>
         <div class="row">
           <div class="img_container">
             <img src="/category_link/bed.jpg" />
-            <router-link to="/" class="category_hover"
-              >床
+            <router-link
+              to="/search??category=%25E5%25BA%258A%25E5%2585%25B7"
+              class="category_hover"
+              >床具
               <icon color="wheat" icon="bed" />
             </router-link>
           </div>
           <div class="img_container">
             <img src="/category_link/chair.jpg" />
-            <router-link to="/" class="category_hover"
+            <router-link
+              to="/search?category=%25E6%25A4%2585%25E5%2587%25B3"
+              class="category_hover"
               >椅子
               <icon color="wheat" icon="chair" />
             </router-link>
