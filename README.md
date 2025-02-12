@@ -10,7 +10,7 @@
 
 以下是本專案的 MySQL 資料庫設計：
 
-![ERD 圖](../shopMy/database/diagram.png)
+![ERD 圖](database/diagram.png)
 
 ---
 
