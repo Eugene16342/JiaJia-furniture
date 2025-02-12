@@ -1,12 +1,14 @@
 const db = require("../models"); // 引入 Sequelize models
 
+const max = 10;
+
 // 添加項目至購物車
 exports.insert_item = async (req, res) => {
   try {
     const user_id = req.user.user_id;
     const { product_id, color_id, quantity } = req.body;
 
-    // 檢查數據庫中是否已存在相同的商品（同用戶、同商品、同顏色）
+    // 檢查是否已存在相同的商品 同用戶 同商品 同顏色
     const existing_item = await db.cart.findOne({
       where: {
         user_id,
@@ -16,33 +18,31 @@ exports.insert_item = async (req, res) => {
     });
 
     if (existing_item) {
-      // 如果已存在，疊加數量，但總數量不能超過 10
+      // 如果已存在 疊加數量 但不能超過數量限制
       const total_quantity = existing_item.quantity + quantity;
-      if (total_quantity > 10) {
+      if (total_quantity >= max) {
+        await existing_item.update({ quantity: max });
         return res.status(200).json({
-          status: "limit",
+          status: "exceed",
         });
       }
 
       // 更新數量
-      const updated_quantity = Math.min(total_quantity, 10);
-      await existing_item.update({ quantity: updated_quantity });
+      await existing_item.update({ quantity: total_quantity });
 
       return res.json({
         status: "updated",
-        item: existing_item,
       });
     } else {
-      // 如果不存在，創建新紀錄
-      const newCartItem = await db.cart.create({
+      // 如果不存在 新增資料
+      await db.cart.create({
         user_id,
         product_id,
-        color_id: color_id || null, // 存入顏色ID，允許為空
-        quantity: Math.min(quantity, 10), // 數量最大限制 10
+        color_id: color_id || null,
+        quantity,
       });
       return res.json({
         status: "create",
-        item: newCartItem,
       });
     }
   } catch (error) {
@@ -82,7 +82,7 @@ exports.sync_cart_items = async (req, res) => {
 
       if (existing_item) {
         const total_quantity = existing_item.quantity + quantity;
-        const updated_quantity = Math.min(total_quantity, 10);
+        const updated_quantity = Math.min(total_quantity, max);
 
         await existing_item.update({ quantity: updated_quantity });
         result.push({
@@ -97,7 +97,7 @@ exports.sync_cart_items = async (req, res) => {
           user_id,
           product_id,
           color_id: color_id || null,
-          quantity: Math.min(quantity, 10),
+          quantity: Math.min(quantity, max),
         });
 
         result.push({
@@ -122,9 +122,8 @@ exports.sync_cart_items = async (req, res) => {
 // 獲取登入後的購物車內容
 exports.get_user_cart = async (req, res) => {
   try {
-    const { user_id } = req.user; // 從 token 提取的 user_id
+    const { user_id } = req.user;
 
-    // 查詢用戶購物車數據
     const cartItems = await db.cart.findAll({
       where: { user_id },
       include: [
@@ -158,7 +157,7 @@ exports.get_user_cart = async (req, res) => {
       const product = item.cart_belong_info || {};
       const categoryName = product.category_id_belong_info?.name || "unknown";
       const productFolder = `${categoryName}${item.product_id}`;
-      const firstImage = product.product_id_hasmany_img?.length
+      const first_image = product.product_id_hasmany_img?.length
         ? `/product/${categoryName}/${productFolder}/${product.product_id_hasmany_img[0].img_url}`
         : null;
 
@@ -170,12 +169,12 @@ exports.get_user_cart = async (req, res) => {
         product: {
           name: product.name || "未知商品",
           price: product.price || 0,
-          image: firstImage,
+          image: first_image,
         },
       };
     });
 
-    res.json(cart_items); // 返回格式化數據
+    res.json(cart_items);
   } catch (error) {
     console.error("獲取購物車失敗:", error);
     res.status(500).json({ error: "伺服器錯誤，無法獲取購物車" });
@@ -201,8 +200,8 @@ exports.update_item = async (req, res) => {
       // 找不到這項目 或許可以轉成 insert_item 來新增項目?
     }
 
-    // 更新數量 最大值為 10
-    const update_quantity = Math.min(quantity, 10);
+    // 更新數量
+    const update_quantity = Math.min(quantity, max);
     await cart_item.update({
       quantity: update_quantity,
     });
@@ -254,9 +253,7 @@ exports.remove_items = async (req, res) => {
     }));
 
     const result = await db.cart.destroy({
-      where: {
-        [db.Sequelize.Op.or]: remove_conditions, // 使用 Sequelize 的 OR 操作符
-      },
+      where: remove_conditions,
     });
 
     // 如果沒有刪除任何項目
@@ -264,19 +261,16 @@ exports.remove_items = async (req, res) => {
       return res.status(404).json({ error: "未找到符合條件的商品" });
     }
 
-    // 刪除成功
-    return res.status(200).json({
-      message: "批量刪除成功",
-    });
+    return res.status(200).json({});
   } catch (error) {
     console.error("批量刪除時發生錯誤", error);
   }
 };
 
 // 只獲取商品id 名稱 價格 圖片路徑
-exports.get_localstorage_base_info = async (req, res) => {
+exports.get_cart_base_inf = async (req, res) => {
   try {
-    const items = req.body; // 從請求中獲取商品和顏色的詳細數據
+    const items = req.body;
     if (!items || !items.length) {
       return res.status(400).json({ error: "商品列表不能為空" });
     }
@@ -325,12 +319,12 @@ exports.get_localstorage_base_info = async (req, res) => {
 
         const categoryName = product.category_id_belong_info?.name || "unknown";
         const productFolder = `${categoryName}${product.product_id}`;
-        const firstImage = product.product_id_hasmany_img.length
+        const first_image = product.product_id_hasmany_img.length
           ? `/product/${categoryName}/${productFolder}/${product.product_id_hasmany_img[0].img_url}`
           : null;
 
         // 找到對應的顏色名稱
-        const colorName = item.color_id
+        const color_name = item.color_id
           ? product.product_id_hasmany_color?.find(
               (product_color_belong_color) =>
                 product_color_belong_color.color_id === item.color_id
@@ -341,8 +335,8 @@ exports.get_localstorage_base_info = async (req, res) => {
           product_id: product.product_id,
           name: product.name,
           price: product.price,
-          image: firstImage, // 只返回第一張圖片
-          color_name: colorName, // 返回對應的顏色名稱
+          image: first_image, // 只返回第一張圖片
+          color_name: color_name, // 返回對應的顏色名稱
           color_id: item.color_id,
         };
       })

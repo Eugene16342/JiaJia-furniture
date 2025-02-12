@@ -1,23 +1,24 @@
 const jwt = require("jsonwebtoken");
 
-// 中間件：驗證 Token
+// 驗證 Token
 exports.authenticate_token = (req, res, next) => {
-  const jwt_secret = process.env.JWT_SECRET; // 從環境變數中讀取密鑰
+  // 從環境變數中讀取密鑰
+  const jwt_secret = process.env.JWT_SECRET;
 
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "未授權" });
+  const auth_header = req.headers["authorization"];
+  const token = auth_header && auth_header.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "token 不存在" });
 
   jwt.verify(token, jwt_secret, (err, user) => {
     if (err) {
-      if (err.name === "TokenExpiredError") {
-        // Token 過期，返回 401 狀態碼和特定訊息
-        return res.status(401).json({ message: "Token 已過期" });
+      if (err.name === "token_expired") {
+        return res.status(401).json({ message: "token 已過期" });
       }
-      // 其他錯誤處理
-      return res.status(403).json({ message: "Token 無效" });
+      // 其他
+      return res.status(403).json({ message: "token 無效" });
     }
-    req.user = user; // 將解碼後的用戶信息存入請求對象
+    // 將解碼後的使用者資訊存入請求對象
+    req.user = user;
     next();
   });
 };

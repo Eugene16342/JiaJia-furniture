@@ -24,9 +24,6 @@ router.delete(
   cart_controller.remove_items
 );
 
-router.post(
-  "/get_localstorage_base_info",
-  cart_controller.get_localstorage_base_info
-);
+router.post("/get_cart_base_inf", cart_controller.get_cart_base_inf);
 
 module.exports = router;

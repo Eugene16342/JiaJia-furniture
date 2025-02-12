@@ -10,20 +10,12 @@ const cart_routes = require("./routes/cart_routes");
 const payment_routes = require("./routes/payment_routes");
 const db = require("./models");
 
+const jwt_secret = process.env.JWT_SECRET;
+
 const app = express();
 
 // 啟用 JSON 解析中間件
 app.use(express.json());
-
-// 添加 express-session 中間件
-app.use(
-  session({
-    secret: "shopmy_jwt_key", // 替換為你的密鑰，建議使用環境變數
-    resave: false, // 是否強制保存 session 即使未修改
-    saveUninitialized: true, // 是否強制將未初始化的 session 存儲
-    cookie: { maxAge: 60000 }, // 設定 cookie 的有效期，60 秒
-  })
-);
 
 // 測試資料庫連線
 (async () => {
@@ -36,7 +28,7 @@ app.use(
   }
 })();
 
-// 設定 API 路由，確保在代理中間件之前
+//  API 路由
 app.use("/api/product", product_routes); // 產品
 app.use("/api/categorie", category_routes); // 種類
 app.use("/api/auth", auth_routes); // 分類 / 註冊

@@ -14,6 +14,7 @@ const delivery_is_free = 100000;
 const total_price_calculator = async (items) => {
   let sub_total = 0;
   let total_quantity = 0;
+  // 用於完成訂單
   const item_details = [];
 
   for (const item of items) {
@@ -69,7 +70,6 @@ exports.computed_total_price = async (req, res) => {
 
 // 完成訂單
 exports.order_confirm = async (req, res) => {
-  // 開始交易
   const create_order = await db.sequelize.transaction();
   const { user_id } = req.user;
   try {
@@ -125,7 +125,7 @@ exports.order_confirm = async (req, res) => {
       { transaction: create_order }
     );
 
-    // 使用 item_details 保存订单明细
+    // 確認訂單明細
     const order_items = item_details.map((item) => ({
       order_id,
       product_id: item.product_id,
@@ -142,13 +142,13 @@ exports.order_confirm = async (req, res) => {
         user_id,
         [db.Sequelize.Op.or]: item_details.map((item) => ({
           product_id: item.product_id,
-          color_id: item.color_id, // 確保同時匹配 product_id 和 color_id
+          color_id: item.color_id,
         })),
       },
       transaction: create_order,
     });
 
-    await create_order.commit(); // 提交交易
+    await create_order.commit();
     return res.status(200).json({ message: "訂單成功建立", order_id });
   } catch (error) {
     await create_order.rollback();

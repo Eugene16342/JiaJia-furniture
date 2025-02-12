@@ -6,21 +6,18 @@ exports.get_info = async (req, res) => {
   try {
     const { user_id } = req.user;
 
-    // 查詢用戶基本信息和詳細信息
     const user = await db.users.findOne({
-      where: { user_id }, // 根據 token 提供的 user_id 查詢
+      where: { user_id },
       include: [
         {
-          model: db.user_detail, // 關聯 user_detail 表
-          as: "user_detail", // 關聯別名，需與模型中定義一致
+          model: db.user_detail,
+          as: "user_detail",
         },
       ],
     });
 
-    // 如果用戶不存在，返回 404
     if (!user) return res.status(404).json({ message: "用戶不存在" });
 
-    // 返回用戶基本信息和詳細信息
     res.json({
       user_name: user.user_name,
       email: user.email,
@@ -41,7 +38,7 @@ exports.update_info = async (req, res) => {
     const { user_id } = req.user;
 
     const { email, first_name, last_name, phone, address } = req.body;
-    console.log("req.body", req.body);
+
     // 查詢用戶基本信息
     const user = await db.users.findOne({
       where: { user_id },
@@ -53,6 +50,7 @@ exports.update_info = async (req, res) => {
       ],
     });
 
+    // 信箱和其他資訊存放的表不同
     if (email) user.email = email;
     await user.save();
 
@@ -70,6 +68,7 @@ exports.update_info = async (req, res) => {
   }
 };
 
+// 切換狀態的語言
 function translate(status) {
   switch (status) {
     case "pending":
