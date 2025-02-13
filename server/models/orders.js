@@ -17,6 +17,10 @@ module.exports = function (sequelize, DataTypes) {
           key: "user_id",
         },
       },
+      user_name: {
+        type: DataTypes.STRING(45),
+        allowNull: false,
+      },
       total_price: {
         type: DataTypes.DECIMAL(10, 0),
         allowNull: false,

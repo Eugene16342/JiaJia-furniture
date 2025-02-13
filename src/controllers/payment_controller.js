@@ -5,6 +5,7 @@ import { reactive, ref } from "vue";
 
 export default function payment_controller() {
   const form_state = reactive({
+    user_name: { value: "" },
     phone: { value: "", errorMessage: "", hasError: false },
     email: { value: "", errorMessage: "", hasError: false },
     first_name: { value: "", errorMessage: "", hasError: false },
@@ -68,12 +69,12 @@ export default function payment_controller() {
           Authorization: `Bearer ${token}`,
         },
       });
+      form_state.user_name.value = data.user_name || "";
       form_state.first_name.value = data.first_name || "";
       form_state.last_name.value = data.last_name || "";
       form_state.phone.value = data.phone || "";
       form_state.email.value = data.email || "";
       form_state.address.value = data.address || "";
-
       return true;
     } catch (error) {
       console.error("加載用戶資料失敗：", error);
@@ -159,6 +160,7 @@ export default function payment_controller() {
 
     const payload = {
       user_info: {
+        user_name: form_state.user_name.value,
         name: form_state.last_name.value + form_state.first_name.value,
         phone: form_state.phone.value,
         email: form_state.email.value,
@@ -168,6 +170,8 @@ export default function payment_controller() {
       payway: form_state.selected_option.value,
       discount_code: form_state.discount.value || null,
     };
+
+    console.log("看我", form_state.user_name.value);
     if (await order_confirm()) {
       try {
         const { data } = await axios.post(

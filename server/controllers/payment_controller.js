@@ -109,11 +109,15 @@ exports.order_confirm = async (req, res) => {
     // 隨機生成單號
     const order_id = nanoid();
 
+    console.log("訂單內 user_info:", user_info);
+    console.log("插入前的 user_name:", user_info.user_name);
+
     // 保存訂單資訊到 orders 表
     await db.orders.create(
       {
         order_id,
         user_id,
+        user_name: user_info.user_name,
         name: user_info.name,
         phone: user_info.phone,
         email: user_info.email,

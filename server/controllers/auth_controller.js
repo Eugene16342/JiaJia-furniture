@@ -146,18 +146,31 @@ exports.register = async (req, res) => {
     return res.status(400).json({ error });
   }
 
+  const transaction = await db.sequelize.transaction();
+
   try {
     const hashed_password = await bcrypt.hash(password, 10);
     const user_id = nanoid();
-    const user = await db.users.create({
-      user_id,
-      user_name,
-      email,
-      password: hashed_password,
-    });
+    const user = await db.users.create(
+      {
+        user_id,
+        user_name,
+        email,
+        password: hashed_password,
+      },
+      { transaction }
+    );
 
+    await db.user_detail.create(
+      {
+        user_id,
+      },
+      { transaction }
+    );
+    await transaction.commit();
     res.status(201).json({ message: "註冊成功", user });
   } catch (error) {
+    await transaction.rollback();
     console.error("註冊失敗:", error);
     res.status(500).json({ error: "註冊失敗，請稍後再試" });
   }
